@@ -1,3 +1,14 @@
 {
-  "specimens": []
+  "specimens": [
+    {
+      "id": "TD-001",
+      "title": "Specimen TD-001",
+      "file": "models/td-001.glb",
+      "description": "3D surface scan from the Travis Downing collection.",
+      "observations": "Original scan geometry with both supplied texture images embedded in a self-contained GLB. Surface appearance reflects the scan and capture conditions.",
+      "interpretation": "Provisional specimen record. Identification and anatomical interpretation are not established by this scan.",
+      "allowDownload": true,
+      "images": []
+    }
+  ]
 }
