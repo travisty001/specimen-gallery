@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f2efe7">
+  <meta name="description" content="Travis Downing’s collection of specimen scans. Explore surfaces in 3D and review documented observations.">
+  <title>Specimen Archive · Travis Downing</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="vendor/model-viewer.min.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header><a class="wordmark" href="./">TD <span>SPECIMEN ARCHIVE</span></a><a href="#collection">The collection <span aria-hidden="true">↗</span></a></header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">INDEPENDENT FIELD COLLECTION · KANSAS</p><h1>A closer look.</h1><p class="lede">An open record of collected specimens, their surfaces, and the questions they raise.</p></div><p class="byline">Collected & documented by<br><strong>Travis Downing</strong></p></section>
+    <section id="collection" aria-labelledby="collection-title">
+      <div class="section-title"><h2 id="collection-title">The collection</h2><span id="count">Loading collection…</span></div>
+      <div class="workspace">
+        <aside aria-label="Specimen selection"><div id="specimens"></div><div class="local-picker"><p class="eyebrow">TRY YOUR OWN SCAN</p><label class="button" for="file">Open a GLB file <span aria-hidden="true">＋</span></label><input id="file" type="file" accept=".glb,model/gltf-binary"><p class="small">Local preview only. Your file stays in this browser and is not uploaded.</p></div></aside>
+        <div class="inspection">
+          <div class="viewer-head"><span id="viewer-label">3D INSPECTION</span><span id="mode-label">Ready for the first scan</span></div>
+          <div id="stage" class="stage">
+            <model-viewer id="viewer" hidden camera-controls touch-action="pan-y" environment-image="neutral" shadow-intensity="0.5" exposure="1" interaction-prompt="none" auto-rotate-delay="1500" rotation-per-second="12deg" alt="Interactive specimen scan"></model-viewer>
+            <div id="empty"><span class="empty-symbol" aria-hidden="true">＋</span><h3>The first scan comes next.</h3><p>Published specimens will appear here.<br>You can preview a GLB from your device now.</p></div>
+            <p id="status" role="status" aria-live="polite"></p>
+          </div>
+          <div class="controls"><div class="views" aria-label="Camera views"><button data-orbit="0deg 75deg auto" disabled>Front</button><button data-orbit="90deg 75deg auto" disabled>Side</button><button data-orbit="0deg 0deg auto" disabled>Top</button><button id="reset" disabled>Reset</button></div><div class="tools"><button id="rotate" aria-pressed="false" disabled>Rotate</button><button id="background" aria-pressed="false">Light background</button><label class="lighting">Light <select id="lighting" disabled><option value="1">Neutral</option><option value="1.5">Bright</option><option value="0.7">Low</option></select></label><button id="fullscreen" disabled>Full screen</button></div></div>
+          <p class="gesture">Drag to turn · Pinch or scroll to zoom · Two fingers or Shift + drag to pan</p>
+        </div>
+      </div>
+      <section class="record" aria-labelledby="record-title"><div><p class="eyebrow" id="record-id">SPECIMEN RECORD</p><h2 id="record-title">Awaiting the first specimen</h2><p id="description">Scans and documentation will be added as they are prepared.</p><a id="download" class="text-link" hidden download>Download viewing GLB ↗</a></div><div><h3>Observations</h3><p id="observations">No observations published yet.</p><h3>Interpretation & status</h3><p id="interpretation">Proposed identifications will be labeled separately from visible features. A scan alone does not establish a fossil identification.</p><div id="references" class="references"></div></div></section>
+    </section>
+  </main>
+  <footer><span>TRAVIS DOWNING · SPECIMEN ARCHIVE</span><span>Surface first. Interpretation with care.</span></footer>
+</body>
+</html>
