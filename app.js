@@ -74,7 +74,7 @@ function selectSpecimen(id) {
   const specimen = specimens.find(item => item.id === id);
   if (!specimen) return;
   const src = asset(specimen.file);
-  clearLocal(); selected = id;
+  clearLocal(); selected = id; loadMarkers();
   setText('mode-label', 'Published specimen'); setText('viewer-label', specimen.id.toUpperCase());
   setText('record-id', specimen.id.toUpperCase()); setText('record-title', specimen.title);
   setText('description', specimen.description || '');
@@ -90,7 +90,7 @@ $('file').addEventListener('change', event => {
   const file = event.target.files[0];
   if (!file) return;
   if (!/\.glb$/i.test(file.name)) { busy('Choose a .glb file.'); event.target.value = ''; return; }
-  clearLocal(); selected = null;
+  clearLocal(); selected = null; loadMarkers();
   localURL = URL.createObjectURL(file);
   history.replaceState(null, '', location.pathname + location.search);
   document.querySelectorAll('.specimen').forEach(button => button.setAttribute('aria-pressed', 'false'));
@@ -133,3 +133,96 @@ try {
 } catch (error) {
   setText('count', 'Collection unavailable'); busy('The collection could not be loaded. You can still preview a local GLB.'); console.error(error);
 }
+
+const preset = $('turntable-preset'), pauseButton = $('turntable-pause');
+let turntablePaused = false, stepAngle = 0, markerMode = false, markers = [];
+const markerKey = () => 'specimen-gallery-poi:' + (selected || 'local');
+function stopTurntable() { viewer.autoRotate = false; $('rotate').setAttribute('aria-pressed','false'); }
+function applyTurntable() {
+  stopTurntable();
+  const mode = preset.value;
+  pauseButton.textContent = turntablePaused ? 'Resume' : 'Pause';
+  if (turntablePaused || mode === 'off' || mode === 'quarter') return;
+  viewer.setAttribute('rotation-per-second', mode === 'present' ? '18deg' : mode === 'reverse' ? '-5deg' : '5deg');
+  viewer.autoRotate = true;
+}
+preset.addEventListener('change', () => { turntablePaused = false; applyTurntable(); });
+pauseButton.addEventListener('click', () => { turntablePaused = !turntablePaused; applyTurntable(); });
+$('turntable-step').addEventListener('click', () => { stopTurntable(); preset.value = 'quarter'; stepAngle = (stepAngle + Math.PI / 2) % (2 * Math.PI); viewer.resetTurntableRotation(stepAngle); });
+$('rotate').addEventListener('click', () => { preset.value = 'off'; turntablePaused = false; });
+function saveMarkers() { if (selected) localStorage.setItem(markerKey(), JSON.stringify(markers)); }
+function renderMarkers() {
+  viewer.querySelectorAll('[data-poi]').forEach(node => node.remove());
+  const list = $('annotation-list'); list.replaceChildren();
+  markers.forEach((item, index) => {
+    const marker = document.createElement('button');
+    marker.className = 'poi-marker'; marker.slot = 'hotspot-poi-' + index;
+    marker.dataset.poi = String(index); marker.dataset.position = item.position;
+    marker.dataset.normal = item.normal || '0m 1m 0m';
+    marker.textContent = String(index + 1); marker.title = item.title || 'Point ' + (index + 1);
+    marker.addEventListener('click', e => { e.stopPropagation(); focusMarker(index); });
+    viewer.append(marker);
+    const row = document.createElement('div'); row.className = 'poi-entry';
+    const select = document.createElement('button'); select.type = 'button'; select.textContent = (index + 1) + '. ' + (item.title || 'Untitled point');
+    select.addEventListener('click', () => focusMarker(index));
+    const edit = document.createElement('button'); edit.type = 'button'; edit.textContent = 'Edit';
+    edit.addEventListener('click', () => {
+      const title = prompt('Point title', item.title || '');
+      if (title === null) return;
+      const note = prompt('Observation or hypothesis (label uncertainty)', item.note || '');
+      if (note === null) return;
+      item.title = title.slice(0, 120); item.note = note.slice(0, 2000); saveMarkers(); renderMarkers();
+    });
+    const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove';
+    remove.addEventListener('click', () => { if (!confirm('Remove this point?')) return; markers.splice(index,1); saveMarkers(); renderMarkers(); });
+    row.append(select, edit, remove);
+    if (item.note) { const note = document.createElement('p'); note.textContent = item.note; row.append(note); }
+    list.append(row);
+  });
+}
+function focusMarker(index) {
+  const item = markers[index]; if (!item) return;
+  viewer.cameraTarget = item.position;
+  $('annotation-help').textContent = item.title + (item.note ? ' — ' + item.note : '');
+}
+function loadMarkers() {
+  try { markers = selected ? JSON.parse(localStorage.getItem(markerKey()) || '[]') : []; if (!Array.isArray(markers)) markers = []; } catch { markers = []; }
+  renderMarkers();
+}
+$('annotate-mode').addEventListener('click', () => {
+  markerMode = !markerMode;
+  $('annotate-mode').setAttribute('aria-pressed', String(markerMode));
+  $('annotation-help').textContent = markerMode ? 'Click the specimen surface to place a point. Dragging still rotates the view.' : 'Enable Place marker, then click a surface.';
+});
+let pointerStart = null;
+viewer.addEventListener('pointerdown', e => { pointerStart = {x:e.clientX,y:e.clientY}; });
+viewer.addEventListener('pointerup', e => {
+  if (!markerMode || !pointerStart || Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>6) return;
+  if (typeof viewer.positionAndNormalFromPoint !== 'function') { $('annotation-help').textContent = 'Surface picking unavailable in this viewer.'; return; }
+  const bounds = viewer.getBoundingClientRect();
+  const hit = viewer.positionAndNormalFromPoint(e.clientX-bounds.left,e.clientY-bounds.top);
+  if (!hit?.position) { $('annotation-help').textContent = 'No surface at that point. Try again.'; return; }
+  const fmt = v => [v.x,v.y,v.z].map(n => Number(n).toFixed(6)+'m').join(' ');
+  const title = prompt('Name this point of interest', 'Point ' + (markers.length + 1));
+  if (title === null) return;
+  const note = prompt('Observation / interpretation (optional)', '');
+  markers.push({title:title.slice(0,120),note:(note||'').slice(0,2000),position:fmt(hit.position),normal:hit.normal ? fmt(hit.normal) : '0m 1m 0m'});
+  saveMarkers(); renderMarkers();
+});
+$('annotations-export').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({schema:'specimen-gallery-poi-v1',specimen:selected || 'local',points:markers},null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href=url; a.download=(selected || 'local')+'-annotations.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+$('annotations-import').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    if (data.schema !== 'specimen-gallery-poi-v1' || !Array.isArray(data.points) || data.points.length>1000 || data.points.some(p => typeof p.position !== 'string' || !/^-?[\\d.]+m -?[\\d.]+m -?[\\d.]+m$/.test(p.position))) throw Error('Invalid annotation file');
+    if (data.specimen !== (selected || 'local') && !confirm('Annotations were created for a different specimen. Import anyway?')) return;
+    markers = data.points.map(p=>({position:p.position,normal:typeof p.normal==='string'?p.normal:'0m 1m 0m',title:String(p.title||'Point').slice(0,120),note:String(p.note||'').slice(0,2000)}));
+    saveMarkers(); renderMarkers();
+  } catch(err) { $('annotation-help').textContent = 'Import failed: '+err.message; }
+  finally { e.target.value=''; }
+});
+window.addEventListener('hashchange',()=>setTimeout(loadMarkers,0));
+viewer.addEventListener('load',()=>{ applyTurntable(); renderMarkers(); });
