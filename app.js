@@ -226,3 +226,32 @@ $('annotations-import').addEventListener('change', async e => {
 });
 window.addEventListener('hashchange',()=>setTimeout(loadMarkers,0));
 viewer.addEventListener('load',()=>{ applyTurntable(); renderMarkers(); });
+
+const lightPresets = {
+  neutral:{exposure:1,shadow:.5}, bright:{exposure:1.55,shadow:.45},
+  low:{exposure:.65,shadow:.65}, soft:{exposure:1.15,shadow:.05},
+  contrast:{exposure:.85,shadow:1}
+};
+function applyLight(exposure, shadow) {
+  viewer.exposure = exposure; viewer.shadowIntensity = shadow;
+  $('exposure-slider').value = exposure; $('shadow-slider').value = shadow;
+  $('exposure-value').textContent = Number(exposure).toFixed(2);
+  $('shadow-value').textContent = Number(shadow).toFixed(2);
+  $('lighting').value = String(exposure) === '1.5' ? '1.5' : String(exposure) === '0.7' ? '0.7' : '1';
+}
+$('light-preset').addEventListener('change', e => {
+  const p = lightPresets[e.target.value]; if (p) applyLight(p.exposure,p.shadow);
+});
+for (const id of ['exposure-slider','shadow-slider']) {
+  $(id).addEventListener('input', () => {
+    $('light-preset').value = 'neutral';
+    applyLight(Number($('exposure-slider').value),Number($('shadow-slider').value));
+  });
+}
+$('lighting').addEventListener('change', e => {
+  const exposure = Number(e.target.value);
+  applyLight(exposure, Number($('shadow-slider').value));
+});
+$('reset').addEventListener('click', () => {
+  $('light-preset').value = 'neutral'; applyLight(1,.5);
+});
