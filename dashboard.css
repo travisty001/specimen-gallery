@@ -1,0 +1,47 @@
+/* Fossil Lab / high-legibility dark workstation */
+:root{color-scheme:dark;--bg:#0b1118;--panel:#121d28;--panel2:#182633;--line:#314657;--text:#e8f2f6;--muted:#a8bdca;--accent:#59d5cb;--accent2:#e0b873;font-family:Inter,'Segoe UI',system-ui,sans-serif;color:var(--text);background:var(--bg)}
+body{background:radial-gradient(ellipse at 50% -10%,#173041 0%,#0b1118 54%);min-height:100vh;font-size:15px}
+header,main,footer{max-width:1700px;padding-left:clamp(18px,3vw,56px);padding-right:clamp(18px,3vw,56px)}
+header{height:76px;border-bottom:1px solid var(--line)}header a{font-size:14px;color:var(--muted)}header a:hover{color:var(--accent)}
+.wordmark{font:700 24px/1.1 'Segoe UI',system-ui,sans-serif;letter-spacing:-1px;color:var(--accent)}
+.wordmark span{font:700 12px/1.3 'Segoe UI',system-ui,sans-serif;letter-spacing:2px;color:var(--text);border-color:var(--line)}
+.intro{padding:36px 0 32px;align-items:center}.eyebrow{font-size:11px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:12px}
+h1{font:700 clamp(36px,5vw,64px)/1.08 'Segoe UI',system-ui,sans-serif;letter-spacing:-2px;margin:0 0 12px}
+.lede{color:var(--muted);font-size:15px;line-height:1.6;max-width:680px}.byline{color:var(--muted);font-size:13px}.byline strong{color:var(--text);font-weight:700}
+.section-title{border-top:1px solid var(--line);padding:17px 0}.section-title h2{font-size:15px;font-weight:750;text-transform:uppercase;letter-spacing:1.5px}.section-title span{font-size:12px;color:var(--muted)}
+.workspace{grid-template-columns:minmax(220px,255px) minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 18px 55px #0004}
+aside{padding:20px;background:#101b25;border-right:1px solid var(--line)}
+.specimen{padding:14px 12px;border-bottom:1px solid var(--line);border-left:3px solid transparent;border-radius:4px;color:var(--text)}
+.specimen span{font-size:11px;color:var(--muted)}.specimen strong{font-size:14px;font-weight:650}
+.specimen[aria-pressed=true]{padding-left:12px;background:#183a42;border-left-color:var(--accent)}
+.small,.empty-list{color:var(--muted);font-size:12px;line-height:1.6}
+.button{border:1px solid #527383;background:#182a37;border-radius:6px;color:var(--text);font-size:13px;padding:12px}
+.button:hover{background:#244454}
+.viewer-head{padding:15px 20px;background:#132330;border-bottom:1px solid var(--line);font-size:11px;letter-spacing:1.4px;color:var(--accent);font-weight:700}
+#mode-label{color:var(--muted);font-size:11px}
+.stage{height:min(60vh,650px);min-height:380px;background:radial-gradient(ellipse at center,#253746 0%,#101b27 62%,#0a1119 100%);border-bottom:1px solid var(--line)}
+.stage.light{background:#cbd9dd;color:#15242d}
+#empty h3{font:700 24px/1.2 'Segoe UI',system-ui,sans-serif}#status{background:#142733ed;color:var(--text);border:1px solid var(--line);font-size:13px}
+.controls{padding:14px 18px;background:#13212c;border-top:0;gap:12px}
+button,select{font-family:inherit}button{font-size:13px;min-height:40px;border:1px solid #415969;border-radius:6px;background:#1a2b38;color:var(--text);font-weight:600;padding:9px 13px}
+button:hover:enabled,button[aria-pressed=true]{background:#1e4c51;border-color:var(--accent);color:#f2ffff}
+button:disabled{opacity:.45}.lighting{font-size:13px;color:var(--muted);gap:9px}
+.lighting select{font-size:13px;background:#1a2b38;border:1px solid #415969;border-radius:6px;padding:9px;color:var(--text)}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #e0b873;outline-offset:3px}
+.gesture{font-size:12px;color:var(--muted);padding:12px 20px 18px;background:#13212c}
+.lab-tools{background:#13212c;padding:10px 18px 18px;gap:14px}
+.lab-panel{background:#172734;border:1px solid #3a5364;border-radius:9px;padding:18px;min-width:0}
+.lab-panel h3{font-size:13px;font-weight:750;letter-spacing:1.3px;text-transform:uppercase;color:var(--accent);margin-bottom:15px}
+.lab-row{gap:9px}.lab-row label{color:var(--muted);font-size:13px}
+.lab-row select{background:#0f1b25;color:var(--text);border:1px solid #587083;font-size:13px;min-height:42px;max-width:100%;margin-left:8px}
+.lab-row button,.poi-entry button{background:#223746;color:var(--text);border:1px solid #587083;font-size:13px;min-height:42px}
+.lab-row button[aria-pressed=true]{background:#1b5556;border-color:var(--accent)}
+.poi-entry{border-top:1px solid var(--line);gap:8px}.poi-entry p{font-size:13px;color:var(--muted);line-height:1.5}
+.poi-marker{background:#167f87;color:#fff;border:2px solid #fff;width:32px;height:32px;font-size:14px}
+.record{gap:6vw;padding:36px 0 60px}.record h2{font:700 32px/1.2 'Segoe UI',system-ui,sans-serif}
+.record h3{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--accent)}
+.record p:not(.eyebrow){font-size:14px;line-height:1.7;color:var(--muted)}
+.text-link{color:var(--accent);font-size:14px}footer{border-top:1px solid var(--line);color:var(--muted);font-size:11px}
+@media(max-width:850px){.workspace{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--line)}.intro{padding:28px 0;display:block}.byline{margin-top:20px}.stage{height:52vh;min-height:330px}.lab-tools{grid-template-columns:1fr}.record{grid-template-columns:1fr}.controls{padding:12px}.wordmark span{font-size:10px}.viewer-head{gap:8px}}
+@media(max-width:480px){header{height:68px}.wordmark{font-size:20px}.wordmark span{font-size:9px;letter-spacing:1px}.stage{height:390px}.lab-row select{margin:8px 0 0;width:100%}.lab-row label{width:100%}.lab-row button{flex:1}.intro h1{font-size:38px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
