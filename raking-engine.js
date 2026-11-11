@@ -9,18 +9,18 @@ section.append(controls);
 const spinPanel=document.createElement('div');spinPanel.className='raking-spin';spinPanel.innerHTML='<label class="light-switch"><input id="spin-enabled" type="checkbox" checked> Rotate specimen in place</label><label>Rotation speed <output id="spin-speed-value">8°/s</output><input id="spin-speed" type="range" min="-30" max="30" step="1" value="8"></label><button type="button" id="spin-reset">Reset rotation</button><p class="small">The model turns around its center. Camera and lighting stay fixed. Negative speed reverses direction.</p>';controls.querySelector('#raking-settings').append(spinPanel);
 const $=id=>document.getElementById(id);
 const presets={studio:[45,40,100,35,false],raking:[80,8,130,8,false],cross:[65,25,100,15,true],silhouette:[180,0,130,0,false],flat:[45,40,100,100,false]};
-let renderer,scene,camera,orbit,root,pivot,ambient,key,fill,frame,observer,token=0,modelUrl='',active=false,lastFrame=0;
+let renderer,scene,camera,orbit,root,pivot,ambient,key,fill,frame,observer,token=0,modelUrl='',active=false,lastFrame=0,viewHeight=2;
 const stage=document.createElement('div');stage.className='raking-stage';stage.hidden=true;host.append(stage);
 function init(){
  if(renderer)return;
  renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.setClearColor(0x101b27);stage.append(renderer.domElement);
- scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(45,1,.001,10000);
+ scene=new THREE.Scene();camera=new THREE.OrthographicCamera(-1,1,1,-1,.001,10000);
  ambient=new THREE.AmbientLight(0xffffff,1);key=new THREE.DirectionalLight(0xffffff,3);fill=new THREE.DirectionalLight(0xffffff,0);
  scene.add(ambient,key,fill);
  orbit=new OrbitControls(camera,renderer.domElement);orbit.enableDamping=true;orbit.dampingFactor=.1;
- const resize=()=>{if(!active)return;const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
+ const resize=()=>{if(!active)return;const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);const aspect=w/h;const height=viewHeight/Math.min(1,aspect);camera.left=-height*aspect/2;camera.right=height*aspect/2;camera.top=height/2;camera.bottom=-height/2;camera.updateProjectionMatrix();};
  observer=new ResizeObserver(resize);observer.observe(stage);
  function draw(time){if(!active)return;frame=requestAnimationFrame(draw);const dt=lastFrame?Math.min((time-lastFrame)/1000,.1):0;lastFrame=time;if(pivot&&$('spin-enabled').checked)pivot.rotation.y+=THREE.MathUtils.degToRad(Number($('spin-speed').value))*dt;orbit.update();renderer.render(scene,camera);}
  stage.draw=()=>{resize();draw();};
@@ -46,8 +46,8 @@ async function load(){
   const gltf=await loader.loadAsync(url);if(seq!==token||!active)return;
   if(pivot)scene.remove(pivot);root=gltf.scene;pivot=new THREE.Group();scene.add(pivot);pivot.add(root);
   const box=new THREE.Box3().setFromObject(root),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
-  root.position.sub(center);const radius=Math.max(size.length()*.65,.001);camera.position.set(radius*1.5,radius*.8,radius*1.5);
-  camera.near=Math.max(radius/10000,.00001);camera.far=radius*100;camera.updateProjectionMatrix();
+  root.position.sub(center);const radius=Math.max(size.length()*.65,.001);viewHeight=Math.max(radius*2.8,.002);camera.zoom=1;camera.position.set(radius*1.5,radius*.8,radius*1.5);
+  camera.near=Math.max(radius/10000,.00001);camera.far=radius*100;const aspect=Math.max(stage.clientWidth,1)/Math.max(stage.clientHeight,1);const height=viewHeight/Math.min(1,aspect);camera.left=-height*aspect/2;camera.right=height*aspect/2;camera.top=height/2;camera.bottom=-height/2;camera.updateProjectionMatrix();
   orbit.target.set(0,0,0);orbit.update();$('status').textContent='';
  }catch(err){$('status').textContent='Directional renderer could not load this model: '+err.message;}
 }
