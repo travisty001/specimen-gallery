@@ -6,9 +6,10 @@ const section=document.querySelector('[aria-label="Lighting controls"]');
 const controls=document.createElement('div');controls.className='raking-controls';
 controls.innerHTML='<label class="light-switch"><input id="raking-enabled" type="checkbox"> Enable directional lighting engine</label><div id="raking-settings" hidden><label>Preset <select id="raking-preset"><option value="studio">Studio</option><option value="raking">Raking</option><option value="cross">Cross-light</option><option value="silhouette">Silhouette</option><option value="flat">Flat</option><option value="custom">Custom</option></select></label><label>Azimuth <output id="azimuth-value">45°</output><input id="azimuth" type="range" min="0" max="360" value="45"></label><label>Elevation <output id="elevation-value">40°</output><input id="elevation" type="range" min="0" max="90" value="40"></label><label>Key strength <output id="key-value">100%</output><input id="key" type="range" min="0" max="200" value="100"></label><label>Ambient fill <output id="ambient-value">35%</output><input id="ambient" type="range" min="0" max="100" value="35"></label><label class="light-switch"><input id="opposing" type="checkbox"> Opposing fill light</label><p class="small">Directional lights respond to specimen geometry. Original textures may contain baked shadows.</p></div>';
 section.append(controls);
+const spinPanel=document.createElement('div');spinPanel.className='raking-spin';spinPanel.innerHTML='<label class="light-switch"><input id="spin-enabled" type="checkbox" checked> Rotate specimen in place</label><label>Rotation speed <output id="spin-speed-value">8°/s</output><input id="spin-speed" type="range" min="-30" max="30" step="1" value="8"></label><button type="button" id="spin-reset">Reset rotation</button><p class="small">The model turns around its center. Camera and lighting stay fixed. Negative speed reverses direction.</p>';controls.querySelector('#raking-settings').append(spinPanel);
 const $=id=>document.getElementById(id);
 const presets={studio:[45,40,100,35,false],raking:[80,8,130,8,false],cross:[65,25,100,15,true],silhouette:[180,0,130,0,false],flat:[45,40,100,100,false]};
-let renderer,scene,camera,orbit,root,ambient,key,fill,frame,observer,token=0,modelUrl='',active=false;
+let renderer,scene,camera,orbit,root,pivot,ambient,key,fill,frame,observer,token=0,modelUrl='',active=false,lastFrame=0;
 const stage=document.createElement('div');stage.className='raking-stage';stage.hidden=true;host.append(stage);
 function init(){
  if(renderer)return;
@@ -21,7 +22,7 @@ function init(){
  orbit=new OrbitControls(camera,renderer.domElement);orbit.enableDamping=true;orbit.dampingFactor=.1;
  const resize=()=>{if(!active)return;const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
  observer=new ResizeObserver(resize);observer.observe(stage);
- function draw(){if(!active)return;frame=requestAnimationFrame(draw);orbit.update();renderer.render(scene,camera);}
+ function draw(time){if(!active)return;frame=requestAnimationFrame(draw);const dt=lastFrame?Math.min((time-lastFrame)/1000,.1):0;lastFrame=time;if(pivot&&$('spin-enabled').checked)pivot.rotation.y+=THREE.MathUtils.degToRad(Number($('spin-speed').value))*dt;orbit.update();renderer.render(scene,camera);}
  stage.draw=()=>{resize();draw();};
 }
 function apply(){
@@ -43,17 +44,17 @@ async function load(){
  modelUrl=url;const loader=new GLTFLoader();
  try{
   const gltf=await loader.loadAsync(url);if(seq!==token||!active)return;
-  if(root)scene.remove(root);root=gltf.scene;scene.add(root);
+  if(pivot)scene.remove(pivot);root=gltf.scene;pivot=new THREE.Group();scene.add(pivot);pivot.add(root);
   const box=new THREE.Box3().setFromObject(root),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
-  const radius=Math.max(size.length()*.65,.001);camera.position.copy(center).add(new THREE.Vector3(radius*1.5,radius*.8,radius*1.5));
+  root.position.sub(center);const radius=Math.max(size.length()*.65,.001);camera.position.set(radius*1.5,radius*.8,radius*1.5);
   camera.near=Math.max(radius/10000,.00001);camera.far=radius*100;camera.updateProjectionMatrix();
-  orbit.target.copy(center);orbit.update();$('status').textContent='';
+  orbit.target.set(0,0,0);orbit.update();$('status').textContent='';
  }catch(err){$('status').textContent='Directional renderer could not load this model: '+err.message;}
 }
 function activate(){
  active=$('raking-enabled').checked;
  $('raking-settings').hidden=!active;stage.hidden=!active;host.classList.toggle('directional-active',active);original.hidden=active;document.getElementById('annotation-help').textContent=active?'Directional mode: point placement uses the standard viewer. Switch back to add or inspect markers.':'Enable Place marker, then click a surface.';
- if(active){init();apply();stage.draw();load();}else{token++;cancelAnimationFrame(frame);}
+ if(active){init();apply();lastFrame=0;stage.draw();load();}else{token++;cancelAnimationFrame(frame);lastFrame=0;}
 }
 $('raking-enabled').addEventListener('change',activate);
 $('raking-preset').addEventListener('change',()=>{
@@ -62,3 +63,5 @@ $('raking-preset').addEventListener('change',()=>{
 for(const id of ['azimuth','elevation','key','ambient','opposing'])$(id).addEventListener('input',()=>{$('raking-preset').value='custom';apply();});
 original.addEventListener('load',()=>{if(active)load();});
 new MutationObserver(()=>{if(active&&original.src!==modelUrl)load();}).observe(original,{attributes:true,attributeFilter:['src']});
+$('spin-speed').addEventListener('input',()=>{$('spin-speed-value').textContent=$('spin-speed').value+'°/s';});
+$('spin-reset').addEventListener('click',()=>{if(pivot)pivot.rotation.y=0;});
